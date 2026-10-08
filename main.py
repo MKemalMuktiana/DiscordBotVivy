@@ -66,7 +66,7 @@ async def on_message(message):
 # ------------------------------------------------------------
 # 5. Scheduler: dicek setiap 60 detik
 # ------------------------------------------------------------
-@tasks.loop(seconds=50)
+@tasks.loop(seconds=60)
 async def cek_jadwal():
     # Ambil waktu sekarang sesuai timezone WIB (bukan UTC).
     sekarang = datetime.now(ZoneInfo(TIMEZONE))
