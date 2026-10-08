@@ -34,11 +34,13 @@ CHANNEL_ID = int(os.getenv("CHANNEL_ID"))   # ID channel tujuan (dikonversi ke i
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("vivy")
 
+
 # ------------------------------------------------------------
 # 3. Buat Discord client
 # ------------------------------------------------------------
 # Intents.default() cukup, karena bot hanya kirim pesan (bukan baca chat).
 intents = discord.Intents.default()
+intents.message_content = True  # agar bisa baca konten pesan (opsional, tergantung kebutuhan)
 client = discord.Client(intents=intents)
 
 # Penanda anti-dobel: menyimpan kunci reminder yang sudah terkirim
@@ -56,11 +58,15 @@ async def on_ready():
     if not cek_jadwal.is_running():
         cek_jadwal.start()
 
+@client.event
+async def on_message(message):
+    if message.content.startswith('hello'):
+        await message.channel.send(f'Hello there {message.author}!') # respond with "Hello!" if the message starts with "!hello"
 
 # ------------------------------------------------------------
 # 5. Scheduler: dicek setiap 60 detik
 # ------------------------------------------------------------
-@tasks.loop(seconds=60)
+@tasks.loop(seconds=50)
 async def cek_jadwal():
     # Ambil waktu sekarang sesuai timezone WIB (bukan UTC).
     sekarang = datetime.now(ZoneInfo(TIMEZONE))
