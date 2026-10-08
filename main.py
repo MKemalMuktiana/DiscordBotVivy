@@ -7,6 +7,7 @@
 # ============================================================
 
 import os
+import asyncio
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -14,6 +15,7 @@ from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 import discord
 from discord.ext import tasks
+from aiohttp import web
 
 # Ambil daftar jadwal & timezone dari config.py
 from config import REMINDERS, TIMEZONE
@@ -88,7 +90,36 @@ async def cek_jadwal():
 
 
 # ------------------------------------------------------------
-# 6. Entry point
+# 6. Web server sederhana untuk Render (opsional)
 # ------------------------------------------------------------
+async def handle_root(request):
+    return web.Response(text="Vivy Remainder Bot is running!")
+
+async def jalankan_bot():
+    app = web.Application()
+    app.router.add_get("/", handle_root)
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    port = int(os.getenv("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    logger.info(f"Web server berjalan di port {port}")
+
+    while True:
+        await asyncio.sleep(3600)  # loop utama, biarkan web server berjalan
+
+
+#------------------------------------------------------------
+# 7. Root handler untuk web server (opsional, bisa diakses via browser)
+#------------------------------------------------------------
+
+async def utama():
+    await asyncio.gather(
+        jalankan_bot(),
+        client.start(TOKEN)
+    )
+
 if __name__ == "__main__":
-    client.run(TOKEN)  # jalankan bot (mode lokal, tanpa web server)
+    asyncio.run(utama())
