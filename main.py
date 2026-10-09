@@ -66,7 +66,6 @@ async def on_message(message):
 # ------------------------------------------------------------
 # 5. Scheduler: dicek setiap 60 detik
 # ------------------------------------------------------------
-@tasks.loop(seconds=60)
 
 def pesan_embed(pesan):
     embed = discord.Embed(title="Reminder", description={pesan}, color=discord.Color.blue())
@@ -75,6 +74,8 @@ def pesan_embed(pesan):
     embed.set_footer(text="See you!")
     embed.set_author(name=client.user.name, icon_url=client.user.display_avatar.url) #  set bot's as author
     return embed
+
+@tasks.loop(seconds=60)
 
 async def cek_jadwal():
     # Ambil waktu sekarang sesuai timezone WIB (bukan UTC).
