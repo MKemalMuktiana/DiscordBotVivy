@@ -68,7 +68,7 @@ async def on_message(message):
 # ------------------------------------------------------------
 
 def pesan_embed(pesan):
-    embed = discord.Embed(title="Reminder", description={pesan}, color=discord.Color.blue())
+    embed = discord.Embed(title="Reminder", description=pesan, color=discord.Color.blue())
     embed.set_thumbnail(url="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdzN3eWE2NHVkczd2ZDZxZzdkYzZzbThkcnQ5d2JmOGozOGZlbGNzMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/RVy3XU9pV1euIO3bsR/giphy.gif")
     embed.set_image(url="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNXFveXlzc2M4emlva3BsM3YzbG16eWdsZDI1OWkxOWZheDFwcmh4diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/10y00L5OqWgHD2/giphy.gif")
     embed.set_footer(text="See you!")
