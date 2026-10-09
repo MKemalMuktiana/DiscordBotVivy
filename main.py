@@ -67,6 +67,15 @@ async def on_message(message):
 # 5. Scheduler: dicek setiap 60 detik
 # ------------------------------------------------------------
 @tasks.loop(seconds=60)
+
+def pesan_embed(pesan):
+    embed = discord.Embed(title="Reminder", description={pesan}, color=discord.Color.blue())
+    embed.set_thumbnail(url="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdzN3eWE2NHVkczd2ZDZxZzdkYzZzbThkcnQ5d2JmOGozOGZlbGNzMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/RVy3XU9pV1euIO3bsR/giphy.gif")
+    embed.set_image(url="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNXFveXlzc2M4emlva3BsM3YzbG16eWdsZDI1OWkxOWZheDFwcmh4diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/10y00L5OqWgHD2/giphy.gif")
+    embed.set_footer(text="See you!")
+    embed.set_author(name=client.user.name, icon_url=client.user.display_avatar.url) #  set bot's as author
+    return embed
+
 async def cek_jadwal():
     # Ambil waktu sekarang sesuai timezone WIB (bukan UTC).
     sekarang = datetime.now(ZoneInfo(TIMEZONE))
@@ -87,7 +96,7 @@ async def cek_jadwal():
             try:
                 # Ambil objek channel lalu kirim pesan reminder.
                 channel = await client.fetch_channel(CHANNEL_ID)
-                await channel.send(pesan)
+                await channel.send(embed=pesan_embed(pesan))
                 sudah_terkirim.add(kunci)
                 logger.info(f"Terkirim: {pesan}")
             except Exception as e:
