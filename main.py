@@ -68,7 +68,8 @@ async def on_message(message):
 # ------------------------------------------------------------
 
 def MentionRole(ROLE_ID):
-    return f"<@&{ROLE_ID}>"
+    member = discord.Object(id=ROLE_ID)
+    return member.mention
 
 def pesan_embed(pesan):
     embed = discord.Embed(title="Reminder", description=pesan + " " + MentionRole(ROLE_ID), color=discord.Color.blue())
