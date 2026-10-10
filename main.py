@@ -102,7 +102,7 @@ async def cek_jadwal():
             try:
                 # Ambil objek channel lalu kirim pesan reminder.
                 channel = await client.fetch_channel(CHANNEL_ID)
-                await channel.send(embed=pesan_embed(pesan), allowed_mentions=allowed_mentions)
+                await channel.send(embed=pesan_embed(pesan), content=MentionRole(ROLE_ID), allowed_mentions=allowed_mentions)
                 sudah_terkirim.add(kunci)
                 logger.info(f"Terkirim: {pesan}")
             except Exception as e:
