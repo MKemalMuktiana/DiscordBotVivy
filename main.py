@@ -68,8 +68,7 @@ async def on_message(message):
 # ------------------------------------------------------------
 
 def MentionRole(ROLE_ID):
-    member = discord.Object(id=ROLE_ID)
-    return member.mention
+    return f"<@&{ROLE_ID}>"
 
 allowed_mentions = discord.AllowedMentions(everyone=False, roles=True)
 
