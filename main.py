@@ -71,6 +71,8 @@ def MentionRole(ROLE_ID):
     member = discord.Object(id=ROLE_ID)
     return member.mention
 
+allowed_mentions = discord.AllowedMentions(everyone=False, roles=True)
+
 def pesan_embed(pesan):
     embed = discord.Embed(title="Reminder", description=pesan + " " + MentionRole(ROLE_ID), color=discord.Color.blue())
     embed.set_thumbnail(url="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdzN3eWE2NHVkczd2ZDZxZzdkYzZzbThkcnQ5d2JmOGozOGZlbGNzMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/RVy3XU9pV1euIO3bsR/giphy.gif")
@@ -101,7 +103,7 @@ async def cek_jadwal():
             try:
                 # Ambil objek channel lalu kirim pesan reminder.
                 channel = await client.fetch_channel(CHANNEL_ID)
-                await channel.send(embed=pesan_embed(pesan))
+                await channel.send(embed=pesan_embed(pesan), allowed_mentions=allowed_mentions)
                 sudah_terkirim.add(kunci)
                 logger.info(f"Terkirim: {pesan}")
             except Exception as e:
