@@ -58,10 +58,10 @@ async def on_ready():
     if not cek_jadwal.is_running():
         cek_jadwal.start()
 
-@client.event
-async def on_message(message):
-    if message.content.startswith('hello'):
-        await message.channel.send(f'Hello there {message.author}!') # respond with "Hello!" if the message starts with "!hello"
+# @client.event
+# async def on_message(message):
+#     if message.content.startswith('hello'):
+#         await message.channel.send(f'Hello there {message.author}!') # respond with "Hello!" if the message starts with "!hello"
 
 # ------------------------------------------------------------
 # 5. Scheduler: dicek setiap 60 detik
