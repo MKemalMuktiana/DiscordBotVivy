@@ -28,7 +28,8 @@ load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")          # token bot (rahasia)
 CHANNEL_ID = int(os.getenv("CHANNEL_ID"))   # ID channel tujuan (dikonversi ke int)
-ROLE_ID = int(os.getenv("ROLE_ID"))         # ID role yang ingin disebutkan (dikonversi ke int)
+ROLE_ID = int(os.getenv("ROLE_ID"))    
+CHANNEL_DB_ID = int(os.getenv("CHANNEL_DB_ID"))
 # ------------------------------------------------------------
 # 2. Setup logging sederhana
 # ------------------------------------------------------------
@@ -61,10 +62,34 @@ async def on_ready():
     if not cek_jadwal.is_running():
         cek_jadwal.start()
 
-# @client.event
-# async def on_message(message):
-#     if message.content.startswith('hello'):
-#         await message.channel.send(f'Hello there {message.author}!') # respond with "Hello!" if the message starts with "!hello"
+@client.event
+async def on_message(message):
+    if message.content.startswith('hello'):
+      await message.channel.send(f'Hello there {message.author}!') # respond with "Hello!" if the message starts with "!hello"
+
+    if message.author.bot:
+        return  # abaikan pesan dari bot lain (atau diri sendiri)
+
+    if message.channel.id == CHANNEL_DB_ID: 
+        # Ambil isi pesan (message di channel brankas) dan simpan ke list content_db
+        try:
+            content_db = [line.strip() for line in message.content.splitlines() if line.strip()]
+            logger.info(f"Database telah terbaca: {content_db}")
+            
+            output_channel = client.get_channel(CHANNEL_ID) 
+            if not output_channel:
+                output_channel = await client.fetch_channel(CHANNEL_ID)
+
+            if content_db:
+                first_item = content_db[0]
+                await output_channel.send(f"Data terbaca: {first_item}")
+
+        except discord.Forbidden:
+            logger.error(f"Gagal: Bot tidak punya izin kirim ke channel {CHANNEL_ID}")
+        except discord.HTTPException as e:
+            logger.error(f"Gagal kirim pesan HTTP Error: {e}")
+        except Exception as e:
+            logger.error(f"Error tidak terduga: {e}")
 
 # ------------------------------------------------------------
 # 5. Scheduler: dicek setiap 60 detik
