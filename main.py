@@ -70,27 +70,6 @@ async def on_message(message):
     if message.author.bot:
         return  # abaikan pesan dari bot lain (atau diri sendiri)
 
-    if message.channel.id == CHANNEL_DB_ID: 
-        # Ambil isi pesan (message di channel brankas) dan simpan ke list content_db
-        try:
-            content_db = [line.strip() for line in message.content.splitlines() if line.strip()]
-            logger.info(f"Database telah terbaca: {content_db}")
-            
-            output_channel = client.get_channel(CHANNEL_ID) 
-            if not output_channel:
-                output_channel = await client.fetch_channel(CHANNEL_ID)
-
-            if content_db:
-                first_item = content_db[0]
-                await output_channel.send(f"Data terbaca: {first_item}")
-
-        except discord.Forbidden:
-            logger.error(f"Gagal: Bot tidak punya izin kirim ke channel {CHANNEL_ID}")
-        except discord.HTTPException as e:
-            logger.error(f"Gagal kirim pesan HTTP Error: {e}")
-        except Exception as e:
-            logger.error(f"Error tidak terduga: {e}")
-
 # ------------------------------------------------------------
 # 5. Scheduler: dicek setiap 60 detik
 # ------------------------------------------------------------
@@ -109,6 +88,7 @@ def pesan_embed(pesan):
     embed.set_image(url="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNXFveXlzc2M4emlva3BsM3YzbG16eWdsZDI1OWkxOWZheDFwcmh4diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/10y00L5OqWgHD2/giphy.gif")
     embed.set_footer(text="See you!")
     embed.set_author(name=client.user.name, icon_url=client.user.display_avatar.url) #  set bot's as author
+    await.message.channel()
     return embed
 
 @tasks.loop(seconds=60)
