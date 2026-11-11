@@ -28,8 +28,7 @@ load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")          # token bot (rahasia)
 CHANNEL_ID = int(os.getenv("CHANNEL_ID"))   # ID channel tujuan (dikonversi ke int)
-ROLE_ID = int(os.getenv("ROLE_ID"))    
-CHANNEL_DB_ID = int(os.getenv("CHANNEL_DB_ID"))
+DB_CHANNEL_ID = int(os.getenv("DB_CHANNEL_ID"))
 # ------------------------------------------------------------
 # 2. Setup logging sederhana
 # ------------------------------------------------------------
@@ -49,37 +48,94 @@ client = discord.Client(intents=intents)
 
 # Penanda anti-dobel: menyimpan kunci reminder yang sudah terkirim
 # agar tidak dikirim dua kali pada menit yang sama.
+# state
+daftar_user = [] 
 sudah_terkirim = set()
 
 
 # ------------------------------------------------------------
 # 4. Event on_ready: dipanggil sekali saat bot berhasil login
 # ------------------------------------------------------------
+
+
 @client.event
 async def on_ready():
     logger.info(f"Vivy hidup! Login sebagai {client.user}")
     # Mulai scheduler hanya jika belum berjalan (hindari double-start).
     if not cek_jadwal.is_running():
         cek_jadwal.start()
+    if not baca_db_loop.is_running():
+        baca_db_loop.start()
 
 @client.event
 async def on_message(message):
+    if message.author.bot:
+        return  # abaikan pesan dari bot lain (atau diri sendiri)
+    
     if message.content.startswith('hello'):
       await message.channel.send(f'Hello there {message.author}!') # respond with "Hello!" if the message starts with "!hello"
 
-    if message.author.bot:
-        return  # abaikan pesan dari bot lain (atau diri sendiri)
+    # baca cache
+    target_channel = client.get_channel(DB_CHANNEL_ID)
+    if target_channel is None:
+        target_channel = await client.fetch_channel(DB_CHANNEL_ID)
 
+async def baca_db():
+    global daftar_user
+    try:
+        # Ambil channel brankas (cache dulu, jika tidak ada baru fetch)
+        target_channel = client.get_channel(DB_CHANNEL_ID)
+        if target_channel is None:
+            target_channel = await client.fetch_channel(DB_CHANNEL_ID)
+
+        # Ambil 1 message terbaru
+        message = None
+        async for msg in target_channel.history(limit=20):
+            message = msg
+
+        if message is None:
+            daftar_user = []
+            logger.info(f"Database kosong")
+        else:
+            logger.info(f"Database ada")
+
+        result = []
+        for line in message.content.splitlines():
+            line = line.strip()
+            if not line:
+                continue  # skip empty lines
+            if line.isdigit():
+                continue  # skip lines that are just numbers
+            uid = int(line)  # convert to int
+            if uid not in result:
+                result.append(uid)
+
+        # Simpan hasil ke variabel global/state
+        daftar_user = result
+
+        logger.info(f"Database berhasil dibaca")
+        return
+
+    except discord.Forbidden:
+        logger.error(f"Bot tidak memiliki izin untuk membaca channel brankas (ID: {DB_CHANNEL_ID})")
+    except discord.HTTPException as e:
+        logger.error(f"Gagal membaca channel brankas: {e}")
+    except Exception as e:
+        logger.error(f"Terjadi kesalahan saat membaca channel brankas: {e}")
+    
 # ------------------------------------------------------------
 # 5. Scheduler: dicek setiap 60 detik
 # ------------------------------------------------------------
 
 # Membentuk teks mention role dari ID-nya (format Discord: <@&ID>).
-def MentionRole(ROLE_ID):
-    return f"<@&{ROLE_ID}>"
+# def MentionRole(ROLE_ID):
+#     return f"<@&{ROLE_ID}>"
+
+def MentionUser(daftar_user):
+    return " ".join([f"<@{uid}>" for uid in daftar_user])
 
 # Aturan mention: everyone dimatikan (hindari ping massal), role diizinkan.
-allowed_mentions = discord.AllowedMentions(everyone=False, roles=True)
+allowed_mentions = discord.AllowedMentions(everyone=False, roles=False, users=True)
 
 # Membentuk embed pesan reminder (judul, warna, gambar, footer, author).
 def pesan_embed(pesan):
@@ -88,15 +144,18 @@ def pesan_embed(pesan):
     embed.set_image(url="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNXFveXlzc2M4emlva3BsM3YzbG16eWdsZDI1OWkxOWZheDFwcmh4diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/10y00L5OqWgHD2/giphy.gif")
     embed.set_footer(text="See you!")
     embed.set_author(name=client.user.name, icon_url=client.user.display_avatar.url) #  set bot's as author
-    await.message.channel()
     return embed
 
-@tasks.loop(seconds=60)
+@tasks.loop(minutes=1)
+async def baca_db_loop():
+    await baca_db()
 
+@tasks.loop(minutes=1)
 async def cek_jadwal():
     # Ambil waktu sekarang sesuai timezone WIB (bukan UTC).
     sekarang = datetime.now(ZoneInfo(TIMEZONE))
     logger.info(f"Tick: {sekarang}")
+    # content = " ".join([f"<@{uid}>" for uid in daftar_user])
 
     # Cocokkan waktu sekarang dengan setiap jadwal di config.py
     for hari, jam, menit, pesan in REMINDERS:
@@ -113,9 +172,9 @@ async def cek_jadwal():
             try:
                 # Ambil objek channel lalu kirim pesan reminder.
                 channel = await client.fetch_channel(CHANNEL_ID)
-                await channel.send(embed=pesan_embed(pesan), content=MentionRole(ROLE_ID), allowed_mentions=allowed_mentions)
+                await channel.send(embed=pesan_embed(pesan), content=MentionUser(daftar_user), allowed_mentions=allowed_mentions)
                 sudah_terkirim.add(kunci)
-                logger.info(f"Terkirim: {pesan}")
+                logger.info(f"Terkirim: {pesan} dengan mention {daftar_user}")
             except Exception as e:
                 # Jika gagal (mis. channel tak ditemukan), catat errornya.
                 logger.error(f"Gagal kirim: {e}")
